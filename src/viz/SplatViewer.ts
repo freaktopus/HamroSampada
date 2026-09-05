@@ -47,6 +47,9 @@ export class SplatViewer {
   setVisible(visible: boolean): void {
     this.root.classList.toggle("is-hidden", !visible);
     this.root.setAttribute("aria-hidden", visible ? "false" : "true");
+    if (visible && this.status === "idle") {
+      this.showPlaceholder();
+    }
   }
 
   /** Kept for focus-budget API; does not alter the Gaussian viewer. */
@@ -65,7 +68,7 @@ export class SplatViewer {
     const token = ++this.loadToken;
     this.currentId = modelId;
     await this.disposeViewer();
-    this.setStatus("loading", `Loading ${model.label}…`);
+    this.setStatus("loading", `Loading ${model.optionLabel}… (may take a minute)`);
 
     try {
       const GS = await import("@mkkellogg/gaussian-splats-3d");
@@ -91,13 +94,13 @@ export class SplatViewer {
       await viewer.addSplatScene(model.url, {
         showLoadingUI: false,
         splatAlphaRemovalThreshold: 5,
-        progressiveLoad: false,
+        progressiveLoad: true,
         onProgress: (percent: number) => {
           if (token !== this.loadToken) return;
           if (typeof percent === "number") {
             this.setStatus(
               "loading",
-              `Loading ${model.optionLabel}… ${Math.min(100, Math.round(percent))}%`,
+              `Loading ${model.optionLabel}… ${Math.min(100, Math.round(percent))}% (may take a minute)`,
             );
           }
         },
@@ -158,6 +161,25 @@ export class SplatViewer {
   private setStatus(s: SplatStatus, detail?: string): void {
     this.status = s;
     this.onStatus?.(s, detail);
+  }
+
+  /** Show a simple 3D placeholder while models load. */
+  private showPlaceholder(): void {
+    if (this.viewer || this.status !== "idle") return;
+    
+    this.root.innerHTML = `
+      <div class="splat-placeholder">
+        <div class="splat-placeholder__cube">
+          <div class="face front"></div>
+          <div class="face back"></div>
+          <div class="face left"></div>
+          <div class="face right"></div>
+          <div class="face top"></div>
+          <div class="face bottom"></div>
+        </div>
+        <p class="splat-placeholder__text">Monument viewer ready · loading may take a minute</p>
+      </div>
+    `;
   }
 
   private getOrbitControls(viewer: GsViewer): GsControls[] {

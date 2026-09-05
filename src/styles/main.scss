@@ -932,6 +932,55 @@ code {
   border-color: #e0a0a0;
 }
 
+.splat-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #faf7f2 0%, #f0ebe3 100%);
+  perspective: 800px;
+}
+
+.splat-placeholder__cube {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  transform-style: preserve-3d;
+  animation: cubeRotate 8s linear infinite;
+  margin-bottom: 16px;
+}
+
+.splat-placeholder__cube .face {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  opacity: 0.8;
+}
+
+.splat-placeholder__cube .front { transform: rotateY(0deg) translateZ(30px); }
+.splat-placeholder__cube .back { transform: rotateY(180deg) translateZ(30px); }
+.splat-placeholder__cube .left { transform: rotateY(-90deg) translateZ(30px); }
+.splat-placeholder__cube .right { transform: rotateY(90deg) translateZ(30px); }
+.splat-placeholder__cube .top { transform: rotateX(90deg) translateZ(30px); }
+.splat-placeholder__cube .bottom { transform: rotateX(-90deg) translateZ(30px); }
+
+.splat-placeholder__text {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+@keyframes cubeRotate {
+  0% { transform: rotateX(0deg) rotateY(0deg); }
+  100% { transform: rotateX(360deg) rotateY(360deg); }
+}
+
 .canvas-hint {
   position: absolute;
   left: 12px;

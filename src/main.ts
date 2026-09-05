@@ -116,9 +116,7 @@ async function main(): Promise<void> {
   await nextFrame();
   revealApp();
 
-  // Monument WebGL must init before the pipeline guide (second context).
-  await splat.load(DEFAULT_SPLAT_ID);
-
+  // Start pipeline guide immediately, load monument in background
   const viz = new PipelineViz(canvas);
   viz.setPriority("secondary");
   viz.start();
@@ -284,6 +282,9 @@ async function main(): Promise<void> {
   applyRenderBudget("temple");
   refreshLayouts();
   requestAnimationFrame(refreshLayouts);
+
+  // Load default monument capture in background (non-blocking)
+  void splat.load(DEFAULT_SPLAT_ID);
 
   console.info(`[HamroSampada] dual-view ready · ${CHAPTERS.length} chapters · ${SPLAT_MODELS.length} captures`);
 }
