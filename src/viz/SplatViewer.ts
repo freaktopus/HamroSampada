@@ -91,17 +91,22 @@ export class SplatViewer {
 
       this.viewer = viewer;
 
+      let progressComplete = false;
       await viewer.addSplatScene(model.url, {
         showLoadingUI: false,
         splatAlphaRemovalThreshold: 5,
         progressiveLoad: true,
         onProgress: (percent: number) => {
-          if (token !== this.loadToken) return;
+          if (token !== this.loadToken || progressComplete) return;
           if (typeof percent === "number" && Number.isFinite(percent)) {
+            const roundedPercent = Math.min(100, Math.round(percent));
             this.setStatus(
               "loading",
-              `Loading ${model.optionLabel}… ${Math.min(100, Math.round(percent))}% (may take few minutes if it's first visit)`,
+              `Loading ${model.optionLabel}… ${roundedPercent}% (may take few minutes if it's first visit)`,
             );
+            if (roundedPercent >= 100) {
+              progressComplete = true;
+            }
           } else {
             // Server sent no Content-Length — show an indeterminate but alive message
             this.setStatus(
@@ -117,6 +122,7 @@ export class SplatViewer {
         return;
       }
 
+      progressComplete = true; // Stop any remaining progress callbacks
       viewer.start();
       this.enableAutoRotate(viewer);
       viewer.forceRenderNextFrame?.();
