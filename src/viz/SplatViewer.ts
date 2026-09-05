@@ -68,7 +68,7 @@ export class SplatViewer {
     const token = ++this.loadToken;
     this.currentId = modelId;
     await this.disposeViewer();
-    this.setStatus("loading", `Loading ${model.optionLabel}… (may take a minute)`);
+    this.setStatus("loading", `Loading ${model.optionLabel}… (may take few minutes)`);
 
     try {
       const GS = await import("@mkkellogg/gaussian-splats-3d");
@@ -97,10 +97,16 @@ export class SplatViewer {
         progressiveLoad: true,
         onProgress: (percent: number) => {
           if (token !== this.loadToken) return;
-          if (typeof percent === "number") {
+          if (typeof percent === "number" && Number.isFinite(percent)) {
             this.setStatus(
               "loading",
-              `Loading ${model.optionLabel}… ${Math.min(100, Math.round(percent))}% (may take a minute)`,
+              `Loading ${model.optionLabel}… ${Math.min(100, Math.round(percent))}% (may take few minutes if it's first visit)`,
+            );
+          } else {
+            // Server sent no Content-Length — show an indeterminate but alive message
+            this.setStatus(
+              "loading",
+              `Loading ${model.optionLabel}… (may take few minutes if it's first visit)`,
             );
           }
         },
