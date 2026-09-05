@@ -1,0 +1,29 @@
+{
+  "name": "hamrosampada",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "HamroSampada — scroll-driven 3D Gaussian Splatting walkthrough for Nepali heritage",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "vercel-build": "yarn build"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "yarn@1.22.22",
+  "license": "MIT",
+  "dependencies": {
+    "@mkkellogg/gaussian-splats-3d": "^0.4.7",
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "@types/three": "^0.180.0",
+    "sass": "^1.91.0",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.3"
+  }
+}

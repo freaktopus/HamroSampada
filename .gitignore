@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Build
+dist/
+
+# Large archival Gaussian masters — convert to .ksplat before committing
+public/3d_models/*.ply
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Caches & tooling
+.cache/
+.vite/
+.vercel/
+*.log
+*.local
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
