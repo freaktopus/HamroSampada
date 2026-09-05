@@ -18,6 +18,7 @@ import {
 import { PipelineViz } from "./viz/PipelineViz";
 import { fillModelSelect, SplatViewer } from "./viz/SplatViewer";
 import { mountSplitResizer } from "./ui/splitResizer";
+import { inject } from "@vercel/analytics"
 
 type FocusMode = "guide" | "temple";
 
@@ -33,6 +34,7 @@ function nextFrame(): Promise<void> {
 }
 
 async function main(): Promise<void> {
+  inject();
   const docs = document.getElementById("docs");
   const siteBrief = document.getElementById("site-brief");
   const walkthrough = document.getElementById("walkthrough");
