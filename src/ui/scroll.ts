@@ -1,6 +1,14 @@
 import { CHAPTERS } from "../content/chapters";
 import { clamp } from "../viz/math";
 
+/** Focus band inside the commentary scroller (matches scrollToChapter alignment). */
+const FOCUS_RATIO = 0.22;
+const SCROLL_END_EPS = 3;
+
+function focusOffset(scroller: HTMLElement): number {
+  return scroller.clientHeight * FOCUS_RATIO;
+}
+
 export function mountChapters(container: HTMLElement): HTMLElement[] {
   container.innerHTML = "";
   return CHAPTERS.map((ch, i) => {
@@ -9,12 +17,41 @@ export function mountChapters(container: HTMLElement): HTMLElement[] {
     section.id = ch.id;
     section.dataset.index = String(i);
     section.innerHTML = `
-      <p class="chapter__kicker">${ch.kicker}</p>
-      <h2 class="chapter__title">${ch.title}</h2>
-      ${ch.html}
+      <header class="chapter__head" tabindex="0" aria-label="Jump to ${ch.title}">
+        <p class="chapter__kicker">${ch.kicker}</p>
+        <h2 class="chapter__title">${ch.title}</h2>
+      </header>
+      <div class="chapter__body">
+        ${ch.html}
+      </div>
     `;
     container.appendChild(section);
     return section;
+  });
+}
+
+/** Click an inactive commentary section to jump there — links stay clickable. */
+export function bindChapterNav(
+  chapters: HTMLElement[],
+  onSelect: (index: number) => void,
+): void {
+  chapters.forEach((section, i) => {
+    const activate = (ev: Event) => {
+      if (section.classList.contains("is-active")) return;
+      const target = ev.target as HTMLElement;
+      if (target.closest("a, button, input, select, textarea, label")) return;
+      onSelect(i);
+    };
+
+    section.addEventListener("click", activate);
+    section.querySelector(".chapter__head")?.addEventListener("keydown", (ev) => {
+      if (section.classList.contains("is-active")) return;
+      const ke = ev as KeyboardEvent;
+      if (ke.key === "Enter" || ke.key === " ") {
+        ke.preventDefault();
+        onSelect(i);
+      }
+    });
   });
 }
 
@@ -39,12 +76,21 @@ export function setActiveUi(
     hudStep?: HTMLElement | null;
     hudTitle?: HTMLElement | null;
     phaseBar?: HTMLElement | null;
+    siteBrief?: HTMLElement | null;
   },
 ): void {
   const ch = CHAPTERS[index];
   if (!ch) return;
 
-  chapters.forEach((el, i) => el.classList.toggle("is-active", i === index));
+  chapters.forEach((el, i) => {
+    const active = i === index;
+    el.classList.toggle("is-active", active);
+    const head = el.querySelector<HTMLElement>(".chapter__head");
+    if (head) {
+      head.tabIndex = active ? -1 : 0;
+    }
+  });
+  opts.siteBrief?.classList.toggle("is-active", index === 0);
   opts.phaseBar?.querySelectorAll(".phase-chip").forEach((chip, i) => {
     chip.classList.toggle("is-active", i === index);
   });
@@ -70,30 +116,45 @@ export function createSidebarTracker(
     const maxScroll = Math.max(1, scroller.scrollHeight - scroller.clientHeight);
     const progress = clamp(scroller.scrollTop / maxScroll, 0, 1);
     const scrollerRect = scroller.getBoundingClientRect();
-    // Focus band: upper third of the visible commentary column
-    const focusY = scrollerRect.top + scroller.clientHeight * 0.22;
+    const focusY = scrollerRect.top + focusOffset(scroller);
+    const distanceFromBottom = maxScroll - scroller.scrollTop;
+    const lastIdx = chapters.length - 1;
 
     let bestIdx = 0;
     let bestScore = Infinity;
 
-    chapters.forEach((el, i) => {
-      const rect = el.getBoundingClientRect();
-      // Prefer the chapter whose title band is nearest the focus line
-      const titleY = rect.top + Math.min(48, rect.height * 0.15);
-      const dist = Math.abs(titleY - focusY);
-      // Slightly prefer chapters that have already entered the focus band
-      const penalty = titleY > focusY + 8 ? 24 : 0;
-      const score = dist + penalty;
-      if (score < bestScore) {
-        bestScore = score;
-        bestIdx = i;
-      }
-    });
+    // Fully scrolled — last section must win
+    if (distanceFromBottom <= SCROLL_END_EPS) {
+      bestIdx = lastIdx;
+    } else {
+      chapters.forEach((el, i) => {
+        const rect = el.getBoundingClientRect();
+        if (focusY >= rect.top - 4 && focusY <= rect.bottom + 4) {
+          bestIdx = i;
+          bestScore = -1;
+          return;
+        }
 
-    // Near end of scroll: always activate the last chapter
-    const distanceFromBottom = maxScroll - scroller.scrollTop;
-    if (distanceFromBottom < Math.max(96, scroller.clientHeight * 0.18) || progress >= 0.97) {
-      bestIdx = chapters.length - 1;
+        const anchorY = rect.top + Math.min(56, rect.height * 0.22);
+        const dist = Math.abs(anchorY - focusY);
+        const penalty = anchorY > focusY + 8 ? 16 : 0;
+        const score = dist + penalty;
+        if (score < bestScore) {
+          bestScore = score;
+          bestIdx = i;
+        }
+      });
+
+      // Near the end: prefer the last visible section when it fills the lower viewport
+      const lastEl = chapters[lastIdx];
+      if (lastEl && distanceFromBottom < focusOffset(scroller)) {
+        const lastRect = lastEl.getBoundingClientRect();
+        if (lastRect.top < scrollerRect.bottom - 24 && lastRect.bottom > scrollerRect.top) {
+          if (focusY >= lastRect.top - 4 || lastRect.bottom >= scrollerRect.bottom - 8) {
+            bestIdx = lastIdx;
+          }
+        }
+      }
     }
 
     const el = chapters[bestIdx]!;
@@ -131,13 +192,12 @@ export function scrollToChapter(scroller: HTMLElement, chapters: HTMLElement[], 
   const el = chapters[i];
   if (!el) return;
 
-  // Position relative to the scroll container (not offsetParent), so the
-  // site-brief above #docs does not push chapters out of view.
   const scrollerRect = scroller.getBoundingClientRect();
-  const elRect = el.getBoundingClientRect();
-  const absoluteTop = elRect.top - scrollerRect.top + scroller.scrollTop;
+  const headEl = el.querySelector<HTMLElement>(".chapter__head") ?? el;
+  const headRect = headEl.getBoundingClientRect();
+  const headAbsoluteTop = headRect.top - scrollerRect.top + scroller.scrollTop;
   const topPad = 16;
-  const target = clamp(absoluteTop - topPad, 0, maxScroll);
+  const target = clamp(headAbsoluteTop - focusOffset(scroller) + topPad, 0, maxScroll);
 
   scroller.scrollTo({ top: target, behavior: "smooth" });
 }

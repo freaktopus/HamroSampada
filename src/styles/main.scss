@@ -309,12 +309,19 @@ code {
   box-sizing: border-box;
   width: 100%;
   max-width: none;
-  padding: 4px var(--text-pad-right) 40vh var(--text-pad-x);
+  padding: 10px;
+  /* Lets the final section scroll up into the focus band without fake section height */
+  padding-bottom: max(1.5rem, calc(78vh - 7rem));
+}
+
+#docs {
+  display: flex;
+  flex-direction: column;
 }
 
 .site-brief {
   box-sizing: border-box;
-  width: calc(100% + var(--text-pad-x) + var(--text-pad-right));
+  // width: calc(100% + var(--text-pad-x) + var(--text-pad-right));
   max-width: none;
   margin: 0 0 4px calc(-1 * var(--text-pad-x));
   padding: 12px var(--text-pad-right) 12px var(--text-pad-x);
@@ -323,13 +330,17 @@ code {
   background: linear-gradient(180deg, #fbf8f3 0%, #ffffff 100%);
   opacity: 1;
   filter: none;
+  cursor: default;
+}
+
+.site-brief:not(.is-active) {
+  cursor: pointer;
 }
 
 .site-brief__title {
   margin: 0 0 4px;
   font-size: 1.15rem;
   font-weight: 600;
-  font-style: italic;
   color: var(--timber);
 }
 
@@ -365,13 +376,13 @@ code {
 }
 
 .chapter {
-  padding: 18px 0 22px;
-  padding-left: 10px;
+  padding: 16px 16px 16px 10px;
   margin-left: -10px;
-  border-bottom: 1px solid var(--line-soft);
-  border-left: 3px solid transparent;
+  border-bottom: 3px solid var(--line-soft);
+  border-top: 3px solid var(--line-soft);
   scroll-margin-top: 16px;
-  opacity: 0.42;
+  cursor: default;
+  opacity: 0.3;
   filter: saturate(0.85);
   transition:
     opacity 0.25s ease,
@@ -380,16 +391,42 @@ code {
     background 0.2s ease;
 }
 
+.chapter:not(.is-active) {
+  cursor: pointer;
+}
+
 .chapter:last-child {
   border-bottom: 0;
-  padding-bottom: 2.5rem;
+}
+
+.chapter__head {
+  margin: 0 0 8px;
+}
+
+.chapter__head:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.chapter__body {
+  cursor: auto;
+}
+
+.chapter__body > :last-child {
+  margin-bottom: 0;
+}
+
+.chapter__body a {
+  cursor: pointer;
 }
 
 .chapter.is-active {
   opacity: 1;
   filter: none;
   background: rgba(209, 142, 47, 0.06);
-  border-left-color: var(--accent);
+  // border-left-color: var(--accent);
+  // border-top: 3px solid var(--accent);
 }
 
 .chapter.is-active .chapter__title {
@@ -410,10 +447,9 @@ code {
 }
 
 .chapter__title {
-  margin: 0 0 10px;
+  margin: 0;
   font-size: 1.15rem;
   font-weight: 600;
-  font-style: italic;
   color: #1a1a1a;
 }
 
@@ -442,7 +478,7 @@ code {
 .spec {
   display: grid;
   gap: 4px;
-  margin: 0.75rem 0 1rem;
+  margin: 0.75rem 0 0;
 }
 
 .spec > div {
@@ -489,7 +525,7 @@ code {
 .tech-table th {
   text-align: left;
   font-weight: 500;
-  font-style: italic;
+  // font-style: italic;
   color: #777;
   padding: 4px 8px;
   border-bottom: 1px solid #999;

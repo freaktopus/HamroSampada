@@ -1,11 +1,20 @@
 import { getSplatModel, type SplatModel } from "../content/models";
 
+type GsControls = {
+  autoRotate: boolean;
+  autoRotateSpeed?: number;
+  addEventListener: (type: string, listener: () => void) => void;
+};
+
 type GsViewer = {
   addSplatScene: (url: string, opts: Record<string, unknown>) => Promise<void>;
   start: () => void;
   stop?: () => void;
   dispose?: () => Promise<void> | void;
   forceRenderNextFrame?: () => void;
+  controls?: GsControls | null;
+  perspectiveControls?: GsControls | null;
+  orthographicControls?: GsControls | null;
 };
 
 export type SplatStatus = "idle" | "loading" | "ready" | "error";
@@ -100,8 +109,9 @@ export class SplatViewer {
       }
 
       viewer.start();
+      this.enableAutoRotate(viewer);
       viewer.forceRenderNextFrame?.();
-      this.setStatus("ready", model.note ?? model.label);
+      this.setStatus("ready", model.label);
 
       // Pane transitions / dual layout — nudge a resize after paint
       requestAnimationFrame(() => {
@@ -148,6 +158,27 @@ export class SplatViewer {
   private setStatus(s: SplatStatus, detail?: string): void {
     this.status = s;
     this.onStatus?.(s, detail);
+  }
+
+  private getOrbitControls(viewer: GsViewer): GsControls[] {
+    return [viewer.controls, viewer.perspectiveControls, viewer.orthographicControls].filter(
+      (c): c is GsControls => c != null,
+    );
+  }
+
+  /** Auto-orbit until the user drags, zooms, or pans the capture. */
+  private enableAutoRotate(viewer: GsViewer): void {
+    const controlsList = this.getOrbitControls(viewer);
+    const stopAutoRotate = () => {
+      for (const controls of controlsList) {
+        controls.autoRotate = false;
+      }
+    };
+    for (const controls of controlsList) {
+      controls.autoRotateSpeed = 1.2;
+      controls.autoRotate = true;
+      controls.addEventListener("start", stopAutoRotate);
+    }
   }
 }
 

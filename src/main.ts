@@ -7,6 +7,7 @@ import {
   SPLAT_MODELS,
 } from "./content/models";
 import {
+  bindChapterNav,
   createSidebarTracker,
   mountChapters,
   mountPhaseBar,
@@ -21,7 +22,7 @@ import { mountSplitResizer } from "./ui/splitResizer";
 type FocusMode = "guide" | "temple";
 
 function focusForChapter(chapterId: string | undefined): FocusMode {
-  if (chapterId === "intro" || chapterId === "temple" || chapterId === "clean") {
+  if (chapterId === "intro" || chapterId === "temple") {
     return "temple";
   }
   return "guide";
@@ -105,8 +106,8 @@ async function main(): Promise<void> {
     hudStep,
     hudTitle,
     phaseBar,
+    siteBrief,
   });
-  if (phaseBar) mountPhaseBar(phaseBar, () => undefined);
 
   // Boot only waits for stylesheet + shell layout — not the temple splat.
   await nextFrame();
@@ -169,6 +170,7 @@ async function main(): Promise<void> {
       hudStep,
       hudTitle,
       phaseBar,
+      siteBrief,
     });
     if (pinnedFocus && focusForChapter(CHAPTERS[index]?.id) === pinnedFocus) {
       pinnedFocus = null;
@@ -176,15 +178,23 @@ async function main(): Promise<void> {
     syncFocus(index);
   };
 
-  if (phaseBar) {
-    mountPhaseBar(phaseBar, (i) => {
-      pinnedFocus = null;
-      navLockIndex = i;
-      navLockUntil = performance.now() + 550;
-      scrollToChapter(walkthrough, chapters, i);
-      sync(i, 0);
-    });
-  }
+  const goToChapter = (i: number) => {
+    pinnedFocus = null;
+    navLockIndex = i;
+    navLockUntil = performance.now() + 650;
+    scrollToChapter(walkthrough, chapters, i);
+    sync(i, 0);
+  };
+
+  if (phaseBar) mountPhaseBar(phaseBar, goToChapter);
+  bindChapterNav(chapters, goToChapter);
+
+  siteBrief.addEventListener("click", (ev) => {
+    if (siteBrief.classList.contains("is-active")) return;
+    const target = ev.target as HTMLElement;
+    if (target.closest("a, button, input, select, textarea, label")) return;
+    goToChapter(0);
+  });
 
   createSidebarTracker(walkthrough, chapters, (index, local) => {
     if (navLockIndex !== null && performance.now() < navLockUntil) {
@@ -211,7 +221,7 @@ async function main(): Promise<void> {
     ev.preventDefault();
     pinnedFocus = null;
     navLockIndex = 0;
-    navLockUntil = performance.now() + 550;
+    navLockUntil = performance.now() + 650;
     scrollToOverview(walkthrough);
     sync(0, 0);
   });
@@ -241,41 +251,26 @@ async function main(): Promise<void> {
       hudStep,
       hudTitle,
       phaseBar,
+      siteBrief,
     });
     setFocus("temple");
     void splat.load(id);
   });
 
   btnPrev?.addEventListener("click", () => {
-    pinnedFocus = null;
-    const i = Math.max(0, activeIndex - 1);
-    navLockIndex = i;
-    navLockUntil = performance.now() + 550;
-    scrollToChapter(walkthrough, chapters, i);
+    goToChapter(Math.max(0, activeIndex - 1));
   });
   btnNext?.addEventListener("click", () => {
-    pinnedFocus = null;
-    const i = Math.min(chapters.length - 1, activeIndex + 1);
-    navLockIndex = i;
-    navLockUntil = performance.now() + 550;
-    scrollToChapter(walkthrough, chapters, i);
+    goToChapter(Math.min(chapters.length - 1, activeIndex + 1));
   });
 
   walkthrough.addEventListener("keydown", (ev) => {
     if (ev.key === "ArrowLeft") {
       ev.preventDefault();
-      pinnedFocus = null;
-      const i = Math.max(0, activeIndex - 1);
-      navLockIndex = i;
-      navLockUntil = performance.now() + 550;
-      scrollToChapter(walkthrough, chapters, i);
+      goToChapter(Math.max(0, activeIndex - 1));
     } else if (ev.key === "ArrowRight") {
       ev.preventDefault();
-      pinnedFocus = null;
-      const i = Math.min(chapters.length - 1, activeIndex + 1);
-      navLockIndex = i;
-      navLockUntil = performance.now() + 550;
-      scrollToChapter(walkthrough, chapters, i);
+      goToChapter(Math.min(chapters.length - 1, activeIndex + 1));
     }
   });
 

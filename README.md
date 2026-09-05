@@ -29,8 +29,8 @@ yarn build
 ## Credits
 
 - **Team:** Sanjay Pahari · Bipul Lamsal · Utkrist Mani Neupane
-- **Academic mentor:** Prof. Dr. Rabindra Bista
-- **Advisor:** Govinda Sharma · Department of Archaeology
+- **Academic mentor:** Prof. Rabindra Bista, PhD, DoCSE, Kathmandu University
+- **Advisor:** Mr. Govinda Adhikari · Engineer at Department of Archaeology,Nepal
 - **Institution:** Kathmandu University, School of Engineering
 - **Under:** [Ministry of Education, Science and Technology (MoEST)](https://moest.gov.np/)
 - **Built to support:** [Department of Archaeology (पुरातत्त्व विभाग)](https://doa.gov.np) — public website, digital archive, and detailed temple architecture documentation
