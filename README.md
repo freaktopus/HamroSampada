@@ -2,10 +2,15 @@
 
 HamroSampada reconstructs Nepali heritage monuments from photorealistic 3D captures using 3D Gaussian Splatting (3DGS) ([Kerbl et al., SIGGRAPH 2023](https://arxiv.org/abs/2308.04079)).
 
-This repo is a walkthrough of **3D Gaussian Splatting (3DGS)**, using our own captures of Nepali heritage monuments as examples. The pipeline code used to reconstruct the scenes is not publicly available yet.
+![3DGS rendering](public/gif/render.gif)
+
+This repo is a walkthrough of **3D Gaussian Splatting (3DGS)**, using our own captures of Nepali heritage monuments as examples. 
 
 It combines a **Technical walkthrough** with a **live WebGL viewer**. Learn how 3DGS works while exploring the reconstructed sites.
 
+![Interactive walkthrough](public/gif/scroll.gif)
+
+The pipeline code used to reconstruct the scenes is not publicly available yet.
 
 ## Develop
 
